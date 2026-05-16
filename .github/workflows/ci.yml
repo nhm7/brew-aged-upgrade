@@ -20,6 +20,16 @@ jobs:
           scandir: "./libexec"
           severity: warning
 
+  ruff:
+    name: Ruff (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Lint
+        run: pipx run ruff check libexec/
+      - name: Format check
+        run: pipx run ruff format --check libexec/
+
   ruby-syntax:
     name: Ruby syntax
     runs-on: ubuntu-latest
