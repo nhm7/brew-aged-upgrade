@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MIN_DAYS="${BREW_AGE_MIN_DAYS:-3}"
+API="https://api.github.com/repos"
+
+_api_get() {
+  curl -sf \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "$1"
+}
+
+_formula_age_days() {
+  local tap="$1" path="$2"
+  local date days
+  date=$(_api_get "${API}/${tap}/commits?path=${path}&per_page=1" |
+    python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['commit']['committer']['date'])" 2>/dev/null) || { echo -1; return; }
+  days=$(COMMIT_DATE="$date" python3 -c "
+import os
+from datetime import datetime, timezone
+d = datetime.fromisoformat(os.environ['COMMIT_DATE'].replace('Z', '+00:00'))
+print((datetime.now(timezone.utc) - d).days)
+" 2>/dev/null) || { echo -1; return; }
+  echo "$days"
+}
+
+_upgrade_if_aged() {
+  local name="$1" is_cask="$2"
+  local tap path first_char days
+
+  if [[ "$name" == */* ]]; then
+    echo "==> Skipping ${name} (third-party tap — cannot check age)"
+    return
+  fi
+
+  first_char="${name:0:1}"
+  if [[ "$is_cask" == true ]]; then
+    tap="Homebrew/homebrew-cask"
+    path="Casks/${first_char}/${name}.rb"
+  else
+    tap="Homebrew/homebrew-core"
+    path="Formula/${first_char}/${name}.rb"
+  fi
+
+  days=$(_formula_age_days "$tap" "$path")
+
+  if [[ "$days" -lt 0 ]]; then
+    echo "==> Skipping ${name} (could not determine age — API limit reached?)"
+    return
+  fi
+
+  if [[ "$days" -ge "$MIN_DAYS" ]]; then
+    echo "==> Upgrading ${name} (${days}d old, threshold ${MIN_DAYS}d)"
+    if [[ "$is_cask" == true ]]; then
+      brew upgrade --cask "$name"
+    else
+      brew upgrade "$name"
+    fi
+  else
+    echo "==> Skipping ${name} (only ${days}d old, threshold ${MIN_DAYS}d)"
+  fi
+}
+
+main() {
+  brew update
+
+  while IFS= read -r name; do
+    [[ -z "$name" ]] && continue
+    _upgrade_if_aged "$name" false
+  done < <(brew outdated --formula --quiet 2>/dev/null)
+
+  while IFS= read -r name; do
+    [[ -z "$name" ]] && continue
+    _upgrade_if_aged "$name" true
+  done < <(brew outdated --cask --quiet 2>/dev/null)
+}
+
+main "$@"
