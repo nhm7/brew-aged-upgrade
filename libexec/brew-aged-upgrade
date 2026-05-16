@@ -2,78 +2,128 @@
 set -euo pipefail
 
 MIN_DAYS="${BREW_AGE_MIN_DAYS:-3}"
-API="https://api.github.com/repos"
+STATE_DIR="${HOME}/.config/brew-aged-upgrade"
+STATE_FILE="${STATE_DIR}/pending.json"
+PLIST_LABEL="com.nhm7.brew-aged-upgrade"
+PLIST_PATH="${HOME}/Library/LaunchAgents/${PLIST_LABEL}.plist"
+LIBEXEC="$(cd "$(dirname "$0")" && pwd)"
+CORE="${LIBEXEC}/brew-aged-upgrade-core.py"
 
-_api_get() {
-  curl -sf \
-    -H "Accept: application/vnd.github+json" \
-    -H "X-GitHub-Api-Version: 2022-11-28" \
-    "$1"
+_die() { echo "Error: $*" >&2; exit 1; }
+
+cmd_start() {
+  local days="$MIN_DAYS"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --days) days="${2:?--days requires a value}"; shift 2 ;;
+      *) _die "Unknown option: $1" ;;
+    esac
+  done
+
+  local self
+  self="$(command -v brew-aged-upgrade)" || _die "brew-aged-upgrade not found on PATH"
+
+  mkdir -p "${HOME}/Library/LaunchAgents" "$STATE_DIR"
+
+  cat > "$PLIST_PATH" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>${PLIST_LABEL}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>${self}</string>
+    <string>run</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>BREW_AGE_MIN_DAYS</key><string>${days}</string>
+    <key>HOME</key><string>${HOME}</string>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartInterval</key><integer>86400</integer>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>${HOME}/Library/Logs/brew-aged-upgrade.log</string>
+  <key>StandardErrorPath</key><string>${HOME}/Library/Logs/brew-aged-upgrade.log</string>
+</dict>
+</plist>
+PLIST
+
+  launchctl load -w "$PLIST_PATH" 2>/dev/null \
+    || launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
+
+  echo "==> brew-aged-upgrade started (min age: ${days} day(s), runs every 24h)"
+  echo "    Log: ${HOME}/Library/Logs/brew-aged-upgrade.log"
 }
 
-_formula_age_days() {
-  local tap="$1" path="$2"
-  local date days
-  date=$(_api_get "${API}/${tap}/commits?path=${path}&per_page=1" |
-    python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['commit']['committer']['date'])" 2>/dev/null) || { echo -1; return; }
-  days=$(COMMIT_DATE="$date" python3 -c "
-import os
-from datetime import datetime, timezone
-d = datetime.fromisoformat(os.environ['COMMIT_DATE'].replace('Z', '+00:00'))
-print((datetime.now(timezone.utc) - d).days)
-" 2>/dev/null) || { echo -1; return; }
-  echo "$days"
-}
-
-_upgrade_if_aged() {
-  local name="$1" is_cask="$2"
-  local tap path first_char days
-
-  if [[ "$name" == */* ]]; then
-    echo "==> Skipping ${name} (third-party tap — cannot check age)"
+cmd_stop() {
+  if [[ ! -f "$PLIST_PATH" ]]; then
+    echo "brew-aged-upgrade is not running"
     return
   fi
+  launchctl unload -w "$PLIST_PATH" 2>/dev/null \
+    || launchctl bootout "gui/$(id -u)/${PLIST_LABEL}" 2>/dev/null \
+    || true
+  rm -f "$PLIST_PATH"
+  echo "==> brew-aged-upgrade stopped"
+}
 
-  first_char="${name:0:1}"
-  if [[ "$is_cask" == true ]]; then
-    tap="Homebrew/homebrew-cask"
-    path="Casks/${first_char}/${name}.rb"
+cmd_status() {
+  if [[ -f "$PLIST_PATH" ]]; then
+    local days
+    days=$(python3 -c "
+import plistlib, sys
+with open(sys.argv[1], 'rb') as f:
+    p = plistlib.load(f)
+print(p.get('EnvironmentVariables', {}).get('BREW_AGE_MIN_DAYS', '3'))
+" "$PLIST_PATH" 2>/dev/null || echo "3")
+    echo "==> brew-aged-upgrade is installed and running"
+    echo "    Min age : ${days} day(s)"
+    echo "    Plist   : ${PLIST_PATH}"
+    echo "    Log     : ${HOME}/Library/Logs/brew-aged-upgrade.log"
   else
-    tap="Homebrew/homebrew-core"
-    path="Formula/${first_char}/${name}.rb"
+    echo "==> brew-aged-upgrade is not running"
+    echo "    Run 'brew-aged-upgrade start' to enable"
   fi
 
-  days=$(_formula_age_days "$tap" "$path")
-
-  if [[ "$days" -lt 0 ]]; then
-    echo "==> Skipping ${name} (could not determine age — API limit reached?)"
-    return
-  fi
-
-  if [[ "$days" -ge "$MIN_DAYS" ]]; then
-    echo "==> Upgrading ${name} (${days}d old, threshold ${MIN_DAYS}d)"
-    if [[ "$is_cask" == true ]]; then
-      brew upgrade --cask "$name"
-    else
-      brew upgrade "$name"
-    fi
-  else
-    echo "==> Skipping ${name} (only ${days}d old, threshold ${MIN_DAYS}d)"
+  if [[ -f "$STATE_FILE" ]]; then
+    echo ""
+    echo "Pending packages (watching, not yet upgraded):"
+    python3 "$CORE" --status "$STATE_FILE"
   fi
 }
 
-main() {
+cmd_run() {
+  mkdir -p "$STATE_DIR"
+  [[ -f "$STATE_FILE" ]] || echo '{}' > "$STATE_FILE"
   brew update
-
-  while IFS= read -r name; do
-    [[ -z "$name" ]] && continue
-    _upgrade_if_aged "$name" false
-  done < <(brew outdated --formula --quiet 2>/dev/null)
-
-  while IFS= read -r name; do
-    [[ -z "$name" ]] && continue
-    _upgrade_if_aged "$name" true
-  done < <(brew outdated --cask --quiet 2>/dev/null)
+  brew outdated --json=v2 2>/dev/null \
+    | BREW_AGE_STATE_FILE="$STATE_FILE" BREW_AGE_MIN_DAYS="$MIN_DAYS" \
+        python3 "$CORE" --run
 }
 
-main "$@"
+usage() {
+  cat <<EOF
+Usage: brew-aged-upgrade <command> [options]
+
+Commands:
+  start [--days N]   Enable daily auto-upgrade with N-day delay (default: ${MIN_DAYS})
+  stop               Disable auto-upgrade and remove the launchd job
+  status             Show status and packages currently being watched
+  run                Run once immediately
+  help               Show this help
+
+Environment:
+  BREW_AGE_MIN_DAYS  Override the minimum age in days (default: 3)
+EOF
+}
+
+case "${1:-help}" in
+  start)  shift; cmd_start "$@" ;;
+  stop)   cmd_stop ;;
+  status) cmd_status ;;
+  run)    cmd_run ;;
+  help|--help|-h) usage ;;
+  *) echo "Unknown command: $1" >&2; usage >&2; exit 1 ;;
+esac

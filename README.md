@@ -1,8 +1,10 @@
-# brew-aged-upgrade
+# 🍺 brew-aged-upgrade
 
-> Upgrade Homebrew packages only after their formula has been published for N days.
+**Automatically upgrade Homebrew packages — but only after they've been available for a few days.**
 
-Most supply chain compromises targeting package managers are detected within 24–72 hours of a malicious commit. By delaying upgrades until a formula has been "in the wild" for a few days, you let the community catch problems before they hit your machine — with zero ongoing maintenance on your part.
+Most supply chain attacks on package managers are caught within 24–72 hours of a malicious commit. By giving each update a short waiting period before it lands on your machine, you let the community spot problems first — with zero extra effort on your part.
+
+No GitHub token required. No API calls. Works with all taps.
 
 ---
 
@@ -13,54 +15,43 @@ brew tap nhm7/aged-upgrade
 brew install --HEAD brew-aged-upgrade
 ```
 
-> **Note:** Once a tagged release exists, `--HEAD` will no longer be needed.
+---
+
+## Quick Start
+
+```sh
+# Enable daily auto-upgrade with the default 3-day delay
+brew-aged-upgrade start
+
+# Or choose your own delay
+brew-aged-upgrade start --days 7
+```
+
+That's it. It runs daily in the background via a launchd job and logs to `~/Library/Logs/brew-aged-upgrade.log`.
 
 ---
 
-## Usage
+## All Commands
 
-```sh
-# Upgrade packages whose formula is ≥ 3 days old (default)
-brew-aged-upgrade
-
-# Custom threshold — only upgrade if formula is ≥ 7 days old
-BREW_AGE_MIN_DAYS=7 brew-aged-upgrade
-```
-
-**What it does, step by step:**
-
-1. Runs `brew update` to refresh the local formula database.
-2. Checks `brew outdated` for formulas and casks separately.
-3. For each outdated package, queries the [GitHub API](https://docs.github.com/en/rest/commits) for the last commit on that formula's file in `homebrew-core` / `homebrew-cask`.
-4. Upgrades only if the formula is at least `BREW_AGE_MIN_DAYS` days old.
-5. Skips third-party tap packages (repo structure is unknown).
+| Command | Description |
+|---|---|
+| `brew-aged-upgrade start [--days N]` | Enable daily auto-upgrade (default: 3-day delay) |
+| `brew-aged-upgrade stop` | Disable auto-upgrade and remove the background job |
+| `brew-aged-upgrade status` | Show status and which packages are currently being watched |
+| `brew-aged-upgrade run` | Run once immediately |
+| `brew-aged-upgrade help` | Show help |
 
 ---
 
-## Rate limits
+## How It Works
 
-The GitHub API allows **60 unauthenticated requests per hour** — one per outdated package. This is fine for most setups. If you regularly have 60+ outdated packages, set `HOMEBREW_GITHUB_API_TOKEN` to a [fine-grained personal access token](https://github.com/settings/tokens?type=beta) with **no extra permissions** (read-only public data is enough) to raise the limit to 5 000 req/hr.
+1. Runs `brew update` to refresh the formula database.
+2. For each outdated package, records the date it was first seen as outdated in a local state file (`~/.config/brew-aged-upgrade/pending.json`).
+3. On each subsequent run, skips packages that haven't waited long enough.
+4. Once a package has been outdated for at least `N` days, it gets upgraded.
+5. If a new version comes out while watching, the clock resets for that package.
 
-```sh
-export HOMEBREW_GITHUB_API_TOKEN=github_pat_...
-```
-
----
-
-## Replace `brew autoupdate`
-
-If you currently use `brew autoupdate` with `--upgrade`, swap it out:
-
-```sh
-brew autoupdate delete
-# then schedule brew-aged-upgrade as a daily launchd job or cron
-```
-
-A simple daily cron entry (`crontab -e`):
-
-```cron
-0 9 * * * /usr/local/bin/brew-aged-upgrade >> ~/Library/Logs/brew-aged-upgrade.log 2>&1
-```
+No network calls beyond what Homebrew itself makes — your machine, your data.
 
 ---
 
@@ -68,29 +59,41 @@ A simple daily cron entry (`crontab -e`):
 
 | Variable | Default | Description |
 |---|---|---|
-| `BREW_AGE_MIN_DAYS` | `3` | Minimum formula age in days before upgrading |
-| `HOMEBREW_GITHUB_API_TOKEN` | _(unset)_ | Optional GitHub token to raise API rate limit |
+| `BREW_AGE_MIN_DAYS` | `3` | Override the delay in days for a one-off `run` |
+
+The delay is stored in the launchd job when you run `start`, so changing `BREW_AGE_MIN_DAYS` only affects manual `run` invocations. To change the scheduled delay, run `stop` and `start` again with the new value.
 
 ---
 
-## Why not just wait and upgrade manually?
+## Replacing `brew autoupdate`
 
-You could — and that works. This tool is for people who want automatic upgrades but with a delay baked in, so they don't have to think about it.
+If you already use `brew autoupdate --upgrade`, swap it out:
+
+```sh
+brew autoupdate delete
+brew-aged-upgrade start --days 3
+```
+
+---
+
+## ✅ Status Example
+
+```
+==> brew-aged-upgrade is installed and running
+    Min age : 3 day(s)
+    Plist   : ~/Library/LaunchAgents/com.nhm7.brew-aged-upgrade.plist
+    Log     : ~/Library/Logs/brew-aged-upgrade.log
+
+Pending packages (watching, not yet upgraded):
+  curl (formula) — seen 1d ago, version 8.8.0
+  iterm2 (cask)  — seen 2d ago, version 3.5.0
+```
 
 ---
 
 ## Security
 
 Please report vulnerabilities via a [GitHub Security Advisory](https://github.com/nhm7/homebrew-aged-upgrade/security/advisories/new) rather than a public issue.
-
----
-
-## Suggested repo rename
-
-To work as a proper Homebrew tap (`brew tap nhm7/aged-upgrade`), rename this repo:
-
-- **Name**: `homebrew-aged-upgrade`
-- **Description**: `Homebrew tap: upgrade packages only after their formula has been published for N days — reducing supply chain attack surface`
 
 ---
 
