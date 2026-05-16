@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name:        ${{ steps.release.outputs.tag_name }}
+      version:         ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  update-formula:
+    name: Update formula
+    needs: release-please
+    if: needs.release-please.outputs.release_created
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute archive SHA256
+        id: archive
+        run: |
+          TAG="${{ needs.release-please.outputs.tag_name }}"
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+          SHA=""
+          for i in 1 2 3 4 5; do
+            SHA=$(curl -sL "$URL" | sha256sum | awk '{print $1}')
+            [ -n "$SHA" ] && break
+            sleep $((i * 3))
+          done
+          echo "url=${URL}"    >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Update formula
+        run: |
+          python3 .github/scripts/update-formula.py \
+            "${{ steps.archive.outputs.url }}"     \
+            "${{ steps.archive.outputs.sha256 }}"  \
+            "${{ needs.release-please.outputs.version }}"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git add Formula/brew-aged-upgrade.rb
+          git diff --cached --quiet \
+            || git commit -m "chore: update formula to ${{ needs.release-please.outputs.tag_name }} [skip ci]"
+          git push origin HEAD:main
