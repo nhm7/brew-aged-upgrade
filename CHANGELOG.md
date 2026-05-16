@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.2.0...v1.2.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* enable line buffering on stdout to preserve log output order ([#21](https://github.com/nhm7/homebrew-aged-upgrade/issues/21)) ([f9962f5](https://github.com/nhm7/homebrew-aged-upgrade/commit/f9962f5dfef4850a6236d8ceb2ec1317bed975fa))
+
 ## [1.2.0](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.1.0...v1.2.0) (2026-05-16)
 
 
