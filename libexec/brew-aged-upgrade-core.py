@@ -31,6 +31,7 @@ def _save(path: str, state: dict) -> None:
 
 
 def run(state_file: str, min_days: int) -> None:
+    sys.stdout.reconfigure(line_buffering=True)
     try:
         outdated = json.load(sys.stdin)
     except json.JSONDecodeError as e:
