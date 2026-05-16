@@ -98,7 +98,7 @@ cmd_run() {
   mkdir -p "$STATE_DIR"
   [[ -f "$STATE_FILE" ]] || echo '{}' > "$STATE_FILE"
   brew update
-  brew outdated --json=v2 2>/dev/null \
+  brew outdated --json=v2 \
     | BREW_AGE_STATE_FILE="$STATE_FILE" BREW_AGE_MIN_DAYS="$MIN_DAYS" \
         python3 "$CORE" --run
 }
