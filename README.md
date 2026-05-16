@@ -11,7 +11,7 @@ No GitHub token required. No API calls. Works with all taps.
 ## Install
 
 ```sh
-brew tap nhm7/aged-upgrade
+brew tap nhm7/brew-aged-upgrade
 brew install brew-aged-upgrade
 ```
 
@@ -95,7 +95,7 @@ Pending packages (watching, not yet upgraded):
 
 ## Security
 
-Please report vulnerabilities via a [GitHub Security Advisory](https://github.com/nhm7/homebrew-aged-upgrade/security/advisories/new) rather than a public issue.
+Please report vulnerabilities via a [GitHub Security Advisory](https://github.com/nhm7/brew-aged-upgrade/security/advisories/new) rather than a public issue.
 
 ---
 
