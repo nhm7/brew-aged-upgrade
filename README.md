@@ -11,8 +11,8 @@ No GitHub token required. No API calls. Works with all taps.
 ## Install
 
 ```sh
-brew tap nhm7/brew-aged-upgrade
-brew install brew-aged-upgrade
+brew tap nhm7/brew-aged-upgrade https://github.com/nhm7/brew-aged-upgrade
+brew install nhm7/brew-aged-upgrade/brew-aged-upgrade
 ```
 
 > **Bleeding edge:** replace `brew install` with `brew install --HEAD` to always track the latest `main`.
