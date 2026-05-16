@@ -7,52 +7,40 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  release:
-    name: Publish release
+  release-please:
+    name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name:        ${{ steps.release.outputs.tag_name }}
+      version:         ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  update-formula:
+    name: Update formula
+    needs: release-please
+    if: needs.release-please.outputs.release_created
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Resolve release version
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(cat VERSION)
-
-          while gh release view "v${VERSION}" --repo "${{ github.repository }}" >/dev/null 2>&1; do
-            VERSION=$(python3 -c "
-maj, min, pat = '${VERSION}'.split('.')
-print(f'{maj}.{min}.{int(pat)+1}')
-")
-          done
-
-          ORIGINAL=$(cat VERSION)
-          if [ "$VERSION" != "$ORIGINAL" ]; then
-            echo "$VERSION" > VERSION
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git config user.name  "github-actions[bot]"
-            git add VERSION
-            git commit -m "chore: bump version to ${VERSION} [skip ci]"
-            git push
-          fi
-
-          echo "VERSION=${VERSION}"        >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=v${VERSION}"  >> "$GITHUB_ENV"
-
-      - name: Tag and push
-        run: |
-          git tag "${{ env.RELEASE_TAG }}"
-          git push origin "${{ env.RELEASE_TAG }}"
 
       - name: Compute archive SHA256
         id: archive
         run: |
-          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${{ env.RELEASE_TAG }}.tar.gz"
+          TAG="${{ needs.release-please.outputs.tag_name }}"
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
           SHA=""
           for i in 1 2 3 4 5; do
             SHA=$(curl -sL "$URL" | sha256sum | awk '{print $1}')
@@ -67,18 +55,10 @@ print(f'{maj}.{min}.{int(pat)+1}')
           python3 .github/scripts/update-formula.py \
             "${{ steps.archive.outputs.url }}"     \
             "${{ steps.archive.outputs.sha256 }}"  \
-            "${{ env.VERSION }}"
+            "${{ needs.release-please.outputs.version }}"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
           git add Formula/brew-aged-upgrade.rb
           git diff --cached --quiet \
-            || git commit -m "chore: update formula to ${{ env.RELEASE_TAG }} [skip ci]"
+            || git commit -m "chore: update formula to ${{ needs.release-please.outputs.tag_name }} [skip ci]"
           git push origin HEAD:main
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ env.RELEASE_TAG }}" \
-            --generate-notes \
-            --latest
