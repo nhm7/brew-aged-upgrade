@@ -4,8 +4,8 @@
 class AgedUpgrade < Formula
   desc "Upgrade Homebrew packages only after they have been outdated for N days"
   homepage "https://github.com/nhm7/homebrew-aged-upgrade"
-  url "https://github.com/nhm7/homebrew-aged-upgrade/archive/refs/tags/v1.1.0.tar.gz"
-  sha256 "657e1ce3cfc87aa73efb39eb964e33895ba5a072d18a8933e401e33e49532183"
+  url "https://github.com/nhm7/homebrew-aged-upgrade/archive/refs/tags/v1.2.0.tar.gz"
+  sha256 "ab63e99d6a791d97e56083ea79f666f70fa1f7f15adf03d8860d7b9a621ff558"
 
   head "https://github.com/nhm7/homebrew-aged-upgrade.git", branch: "main"
   license "MIT"
