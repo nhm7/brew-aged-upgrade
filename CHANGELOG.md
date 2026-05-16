@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.0.1...v1.1.0) (2026-05-16)
+
+
+### Features
+
+* rename formula to aged-upgrade, fix install UX and correctness issues ([#17](https://github.com/nhm7/homebrew-aged-upgrade/issues/17)) ([ed94cb5](https://github.com/nhm7/homebrew-aged-upgrade/commit/ed94cb546a83f2ea664ade5e69e2b5b0e4e401ac))
+
+
+### Bug Fixes
+
+* pass --repo to gh pr merge so it works without a local checkout ([#15](https://github.com/nhm7/homebrew-aged-upgrade/issues/15)) ([34d4086](https://github.com/nhm7/homebrew-aged-upgrade/commit/34d4086fca75c4cae4f6ab0f6c51163be5cd941d))
+
 ## [1.0.1](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.0.0...v1.0.1) (2026-05-16)
 
 
