@@ -1,4 +1,4 @@
-# homebrew-aged-upgrade
+# 🍺 homebrew-aged-upgrade
 
 **Automatically upgrade Homebrew packages — but only after they've been available for a few days.**
 
