@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.1.0...v1.2.0) (2026-05-16)
+
+
+### Features
+
+* interactive autoupdate conflict prompt, formula caveats, and resilience fixes ([#19](https://github.com/nhm7/homebrew-aged-upgrade/issues/19)) ([8936482](https://github.com/nhm7/homebrew-aged-upgrade/commit/8936482edf0df09dd287f20cfd431e8a716095cf))
+
 ## [1.1.0](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.0.1...v1.1.0) (2026-05-16)
 
 
