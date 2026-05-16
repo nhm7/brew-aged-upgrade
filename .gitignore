@@ -1,18 +1,174 @@
-# macOS
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.sample
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+secrets/
+secret.json
+credentials.json
+service-account*.json
+.netrc
+.npmrc
+.pypirc
+auth.json
+token
+token.txt
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
 .DS_Store
 .AppleDouble
 .LSOverride
+Icon$'\r'
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
 
-# Editors
+# ── Windows ───────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Linux ─────────────────────────────────────────────────────────────────────
+*~
+.nfs*
+
+# ── Editors ───────────────────────────────────────────────────────────────────
 .vscode/
+!.vscode/extensions.json
 .idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+.history/
 *.swp
 *.swo
+*.bak
+*.orig
+*~
 
-# Homebrew
-.brew/
+# ── AI / coding agent configs & data ─────────────────────────────────────────
+.claude/
+.cursor/
+.copilot/
+.github/copilot-instructions.md
+.aider*
+!.aider.conf.yml
+.continue/
+.codeium/
+.tabnine/
+.sourcegraph/
+.cody/
+.windsurf/
+openai-key*
+anthropic-key*
 
-# Ruby
+# ── Node / JS / TS ────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+dist/
+.next/
+.nuxt/
+.output/
+.cache/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ── Ruby ──────────────────────────────────────────────────────────────────────
 *.gem
 .bundle/
 vendor/bundle/
+Gemfile.lock
+
+# ── Go ────────────────────────────────────────────────────────────────────────
+bin/
+vendor/
+
+# ── Rust ──────────────────────────────────────────────────────────────────────
+target/
+Cargo.lock
+
+# ── Java / Kotlin ─────────────────────────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+
+# ── Logs & temp ───────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+*.pid
+*.seed
+*.pid.lock
+tmp/
+temp/
+.temp/
+
+# ── Homebrew ──────────────────────────────────────────────────────────────────
+.brew/
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+.docker/
+docker-compose.override.yml
+
+# ── Terraform ─────────────────────────────────────────────────────────────────
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example
+
+# ── Misc build / tooling ──────────────────────────────────────────────────────
+.build/
+.cache/
+out/
+coverage/
