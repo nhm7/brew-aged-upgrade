@@ -24,8 +24,10 @@ def _load(path: str) -> dict:
 
 
 def _save(path: str, state: dict) -> None:
-    with open(path, "w") as f:
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(state, f, indent=2)
+    os.replace(tmp, path)
 
 
 def run(state_file: str, min_days: int) -> None:
@@ -68,8 +70,12 @@ def run(state_file: str, min_days: int) -> None:
 
     _save(state_file, state)
 
+    if not to_upgrade_formulae and not to_upgrade_casks:
+        print("==> Nothing to upgrade yet.")
+        return
+
     for name in to_upgrade_formulae:
-        subprocess.run(["brew", "upgrade", name], check=False)
+        subprocess.run(["brew", "upgrade", "--formula", name], check=False)
     for name in to_upgrade_casks:
         subprocess.run(["brew", "upgrade", "--cask", name], check=False)
 

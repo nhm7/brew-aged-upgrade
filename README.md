@@ -1,4 +1,4 @@
-# 🍺 brew-aged-upgrade
+# homebrew-aged-upgrade
 
 **Automatically upgrade Homebrew packages — but only after they've been available for a few days.**
 
@@ -12,10 +12,10 @@ No GitHub token required. No API calls. Works with all taps.
 
 ```sh
 brew tap nhm7/aged-upgrade
-brew install nhm7/aged-upgrade/brew-aged-upgrade
+brew install nhm7/aged-upgrade/aged-upgrade
 ```
 
-> **Bleeding edge:** use `brew install --HEAD nhm7/aged-upgrade/brew-aged-upgrade` to always track the latest `main`.
+> **Bleeding edge:** use `brew install --HEAD nhm7/aged-upgrade/aged-upgrade` to always track the latest `main`.
 
 ---
 
@@ -30,6 +30,11 @@ brew-aged-upgrade start --days 7
 ```
 
 That's it. It runs daily in the background via a launchd job and logs to `~/Library/Logs/brew-aged-upgrade.log`.
+
+> **Already using `brew autoupdate`?** The two tools conflict — both run `brew update` daily. Remove it first:
+> ```sh
+> brew autoupdate delete
+> ```
 
 ---
 
@@ -65,20 +70,11 @@ No network calls beyond what Homebrew itself makes — your machine, your data.
 
 The delay is stored in the launchd job when you run `start`, so changing `BREW_AGE_MIN_DAYS` only affects manual `run` invocations. To change the scheduled delay, run `stop` and `start` again with the new value.
 
----
-
-## Replacing `brew autoupdate`
-
-If you already use `brew autoupdate --upgrade`, swap it out:
-
-```sh
-brew autoupdate delete
-brew-aged-upgrade start --days 3
-```
+**Note:** `stop` preserves the watch state file (`~/.config/brew-aged-upgrade/pending.json`). Running `start` again picks up where it left off. Delete that file first if you want all timers to reset.
 
 ---
 
-## ✅ Status Example
+## Status Example
 
 ```
 ==> brew-aged-upgrade is installed and running

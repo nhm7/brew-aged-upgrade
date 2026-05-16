@@ -55,6 +55,13 @@ PLIST
 
   echo "==> brew-aged-upgrade started (min age: ${days} day(s), runs every 24h)"
   echo "    Log: ${HOME}/Library/Logs/brew-aged-upgrade.log"
+
+  if brew autoupdate status 2>/dev/null | grep -qi "autoupdate is installed"; then
+    echo ""
+    echo "Warning: brew autoupdate is also active and will run brew update/upgrade"
+    echo "         in parallel. To avoid conflicts, remove it first:"
+    echo "           brew autoupdate delete"
+  fi
 }
 
 cmd_stop() {
@@ -67,6 +74,8 @@ cmd_stop() {
     || true
   rm -f "$PLIST_PATH"
   echo "==> brew-aged-upgrade stopped"
+  echo "    Watch timers preserved at ${STATE_FILE}"
+  echo "    Delete that file to reset all timers, or just run 'start' to resume."
 }
 
 cmd_status() {

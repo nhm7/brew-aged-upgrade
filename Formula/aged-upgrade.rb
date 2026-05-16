@@ -1,7 +1,7 @@
 # typed: false
 # frozen_string_literal: true
 
-class BrewAgedUpgrade < Formula
+class AgedUpgrade < Formula
   desc "Upgrade Homebrew packages only after they have been outdated for N days"
   homepage "https://github.com/nhm7/homebrew-aged-upgrade"
   url "https://github.com/nhm7/homebrew-aged-upgrade/archive/refs/tags/v1.0.1.tar.gz"
