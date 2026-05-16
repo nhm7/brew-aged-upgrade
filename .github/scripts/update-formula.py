@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update Formula/brew-aged-upgrade.rb with a new stable release URL and SHA256.
+"""Update Formula/aged-upgrade.rb with a new stable release URL and SHA256.
 
 Usage: update-formula.py <url> <sha256> <version>
 
