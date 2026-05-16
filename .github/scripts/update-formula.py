@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update Formula/brew-aged-upgrade.rb with a new stable release URL and SHA256.
+"""Update Formula/aged-upgrade.rb with a new stable release URL and SHA256.
 
 Usage: update-formula.py <url> <sha256> <version>
 
@@ -11,7 +11,7 @@ import re
 import sys
 
 url, sha256, version = sys.argv[1], sys.argv[2], sys.argv[3]
-path = "Formula/brew-aged-upgrade.rb"
+path = "Formula/aged-upgrade.rb"
 
 with open(path) as f:
     content = f.read()

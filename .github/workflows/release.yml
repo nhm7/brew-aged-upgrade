@@ -27,7 +27,7 @@ jobs:
 
       - name: Enable auto-merge on release PR
         if: steps.release.outputs.pr
-        run: gh pr merge --auto --merge --repo "${{ github.repository }}" "${{ fromJson(steps.release.outputs.pr).number }}"
+        run: gh pr merge --auto --squash --repo "${{ github.repository }}" "${{ fromJson(steps.release.outputs.pr).number }}"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
@@ -61,7 +61,7 @@ jobs:
             "${{ steps.release.outputs.version }}"
           git config user.name  "${{ steps.app-token.outputs.app-slug }}[bot]"
           git config user.email "${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-          git add Formula/brew-aged-upgrade.rb
+          git add Formula/aged-upgrade.rb
           git diff --cached --quiet \
             || git commit -m "chore: update formula to ${{ steps.release.outputs.tag_name }} [skip ci]"
           git push origin HEAD:main

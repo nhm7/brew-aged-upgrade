@@ -24,4 +24,4 @@ jobs:
       - name: Ruff format check
         run: pipx run ruff format --check libexec/
       - name: Ruby syntax
-        run: ruby -c Formula/brew-aged-upgrade.rb
+        run: ruby -c Formula/aged-upgrade.rb
