@@ -9,34 +9,19 @@ permissions:
   contents: read
 
 jobs:
-  shellcheck:
-    name: ShellCheck
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Run ShellCheck
+      - name: ShellCheck
         uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: "./libexec"
           severity: warning
-
-  ruff:
-    name: Ruff (Python)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Lint
+      - name: Ruff lint
         run: pipx run ruff check libexec/
-      - name: Format check
+      - name: Ruff format check
         run: pipx run ruff format --check libexec/
-
-  ruby-syntax:
-    name: Ruby syntax
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-      - name: Check formula syntax
+      - name: Ruby syntax
         run: ruby -c Formula/brew-aged-upgrade.rb
