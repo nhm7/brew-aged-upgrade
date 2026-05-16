@@ -31,7 +31,11 @@ def _save(path: str, state: dict) -> None:
 
 
 def run(state_file: str, min_days: int) -> None:
-    outdated = json.load(sys.stdin)
+    try:
+        outdated = json.load(sys.stdin)
+    except json.JSONDecodeError as e:
+        print(f"brew-aged-upgrade: could not parse brew outdated output: {e}", file=sys.stderr)
+        sys.exit(1)
     state = _load(state_file)
     today = date.today()
 

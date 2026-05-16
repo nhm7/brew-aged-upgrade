@@ -50,18 +50,27 @@ cmd_start() {
 </plist>
 PLIST
 
+  if brew autoupdate status 2>/dev/null | grep -qi "autoupdate is installed"; then
+    echo "Warning: brew autoupdate is also installed and conflicts with brew-aged-upgrade"
+    echo "         (both run brew update/upgrade daily)."
+    printf "Remove brew autoupdate now? [y/N] "
+    read -r answer
+    case "$answer" in
+      y|Y|yes|Yes|YES)
+        brew autoupdate delete
+        ;;
+      *)
+        echo "Aborted. Run 'brew autoupdate delete' first, then re-run 'brew-aged-upgrade start'."
+        exit 1
+        ;;
+    esac
+  fi
+
   launchctl load -w "$PLIST_PATH" 2>/dev/null \
     || launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
 
   echo "==> brew-aged-upgrade started (min age: ${days} day(s), runs every 24h)"
   echo "    Log: ${HOME}/Library/Logs/brew-aged-upgrade.log"
-
-  if brew autoupdate status 2>/dev/null | grep -qi "autoupdate is installed"; then
-    echo ""
-    echo "Warning: brew autoupdate is also active and will run brew update/upgrade"
-    echo "         in parallel. To avoid conflicts, remove it first:"
-    echo "           brew autoupdate delete"
-  fi
 }
 
 cmd_stop() {
