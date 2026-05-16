@@ -3,7 +3,7 @@
 
 Usage: update-formula.py <url> <sha256> <version>
 
-Inserts url/sha256/version before the existing `head` line on first release,
+Inserts url/sha256 before the existing `head` line on first release,
 or updates them in place on subsequent releases.
 """
 
@@ -16,12 +16,12 @@ path = "Formula/aged-upgrade.rb"
 with open(path) as f:
     content = f.read()
 
-stable_block = f'  url "{url}"\n  sha256 "{sha256}"\n  version "{version}"\n'
+stable_block = f'  url "{url}"\n  sha256 "{sha256}"\n'
 
 if re.search(r'^\s+url "https://', content, re.MULTILINE):
-    # Subsequent release — replace the existing stable block
+    # Subsequent release — replace the existing stable block (version line optional)
     content = re.sub(
-        r'^\s+url "[^"]*"\n\s+sha256 "[^"]*"\n\s+version "[^"]*"\n',
+        r'^\s+url "[^"]*"\n\s+sha256 "[^"]*"\n(?:\s+version "[^"]*"\n)?',
         stable_block,
         content,
         flags=re.MULTILINE,
