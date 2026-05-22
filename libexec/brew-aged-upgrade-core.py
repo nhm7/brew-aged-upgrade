@@ -142,7 +142,8 @@ def _notify_upgrade_result(
         f"display notification {json.dumps(summary, ensure_ascii=False)} "
         f"with title {json.dumps(title, ensure_ascii=False)}"
     )
-    subprocess.run(["osascript", "-e", script], check=False)
+    if shutil.which("osascript"):
+        subprocess.run(["osascript", "-e", script], check=False)
 
 
 def run(state_file: str, min_days: int) -> None:
