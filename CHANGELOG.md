@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.2.1...v1.3.0) (2026-05-22)
+
+
+### Features
+
+* add macOS upgrade notification ([#24](https://github.com/nhm7/homebrew-aged-upgrade/issues/24)) ([cf993bb](https://github.com/nhm7/homebrew-aged-upgrade/commit/cf993bbf42caaa99e0fdfa7e4865619799edc748))
+
 ## [1.2.1](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.2.0...v1.2.1) (2026-05-16)
 
 
