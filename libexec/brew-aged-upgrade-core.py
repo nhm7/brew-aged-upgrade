@@ -38,7 +38,11 @@ def _notify_upgrade_result(formulae: list[str], casks: list[str]) -> None:
     summary = ", ".join(upgraded)
     title = "🍺 brew-aged-upgrade"
     subtitle = f"Upgraded {len(upgraded)} package(s)"
-    script = f'display notification "{summary}" with title "{title}" subtitle "{subtitle}"'
+    script = (
+        f"display notification {json.dumps(summary, ensure_ascii=False)} "
+        f"with title {json.dumps(title, ensure_ascii=False)} "
+        f"subtitle {json.dumps(subtitle, ensure_ascii=False)}"
+    )
     subprocess.run(["osascript", "-e", script], check=False)
 
 
