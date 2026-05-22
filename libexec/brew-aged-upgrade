@@ -4,12 +4,29 @@ set -euo pipefail
 MIN_DAYS="${BREW_AGE_MIN_DAYS:-3}"
 STATE_DIR="${HOME}/.config/brew-aged-upgrade"
 STATE_FILE="${STATE_DIR}/pending.json"
+LOG_FILE="${HOME}/Library/Logs/brew-aged-upgrade.log"
 PLIST_LABEL="com.nhm7.brew-aged-upgrade"
 PLIST_PATH="${HOME}/Library/LaunchAgents/${PLIST_LABEL}.plist"
 LIBEXEC="$(cd "$(dirname "$0")" && pwd)"
 CORE="${LIBEXEC}/brew-aged-upgrade-core.py"
 
 _die() { echo "Error: $*" >&2; exit 1; }
+
+log_file() {
+  mkdir -p "$(dirname "$LOG_FILE")"
+  printf '%s %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$*" >> "$LOG_FILE"
+}
+
+log_stdout() {
+  printf '%s %s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$*"
+  if [[ -t 1 ]]; then
+    log_file "$*"
+  fi
+}
+
+prune_logs() {
+  [[ -f "$LOG_FILE" ]] && python3 "$CORE" --prune-log "$LOG_FILE" || true
+}
 
 cmd_start() {
   local days="$MIN_DAYS"
@@ -44,8 +61,8 @@ cmd_start() {
   </dict>
   <key>StartInterval</key><integer>86400</integer>
   <key>RunAtLoad</key><false/>
-  <key>StandardOutPath</key><string>${HOME}/Library/Logs/brew-aged-upgrade.log</string>
-  <key>StandardErrorPath</key><string>${HOME}/Library/Logs/brew-aged-upgrade.log</string>
+  <key>StandardOutPath</key><string>${LOG_FILE}</string>
+  <key>StandardErrorPath</key><string>${LOG_FILE}</string>
 </dict>
 </plist>
 PLIST
@@ -70,7 +87,7 @@ PLIST
     || launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
 
   echo "==> brew-aged-upgrade started (min age: ${days} day(s), runs every 24h)"
-  echo "    Log: ${HOME}/Library/Logs/brew-aged-upgrade.log"
+  echo "    Log: ${LOG_FILE}"
 }
 
 cmd_stop() {
@@ -99,7 +116,7 @@ print(p.get('EnvironmentVariables', {}).get('BREW_AGE_MIN_DAYS', '3'))
     echo "==> brew-aged-upgrade is installed and running"
     echo "    Min age : ${days} day(s)"
     echo "    Plist   : ${PLIST_PATH}"
-    echo "    Log     : ${HOME}/Library/Logs/brew-aged-upgrade.log"
+    echo "    Log     : ${LOG_FILE}"
   else
     echo "==> brew-aged-upgrade is not running"
     echo "    Run 'brew-aged-upgrade start' to enable"
@@ -113,14 +130,17 @@ print(p.get('EnvironmentVariables', {}).get('BREW_AGE_MIN_DAYS', '3'))
 }
 
 cmd_run() {
-  mkdir -p "$STATE_DIR"
+  mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")"
+  prune_logs
+  [[ -t 1 ]] && export BREW_AGE_LOG_FILE="$LOG_FILE"
   [[ -f "$STATE_FILE" ]] || echo '{}' > "$STATE_FILE"
-  echo "==> brew-aged-upgrade run at $(date) (min age: ${MIN_DAYS}d)"
+  log_stdout "==> brew-aged-upgrade run at $(date) (min age: ${MIN_DAYS}d)"
+  log_file "==> Running brew update --quiet"
   brew update --quiet
+  log_file "==> Running brew outdated --json=v2"
   brew outdated --json=v2 \
-    | BREW_AGE_STATE_FILE="$STATE_FILE" BREW_AGE_MIN_DAYS="$MIN_DAYS" \
-        python3 "$CORE" --run
-  echo "==> done"
+    | BREW_AGE_STATE_FILE="$STATE_FILE" BREW_AGE_MIN_DAYS="$MIN_DAYS" python3 "$CORE" --run
+  log_stdout "==> done"
 }
 
 usage() {
