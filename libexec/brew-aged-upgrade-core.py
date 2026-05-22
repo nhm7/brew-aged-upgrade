@@ -30,6 +30,18 @@ def _save(path: str, state: dict) -> None:
     os.replace(tmp, path)
 
 
+def _notify_upgrade_result(formulae: list[str], casks: list[str]) -> None:
+    upgraded = formulae + casks
+    if not upgraded:
+        return
+
+    summary = ", ".join(upgraded)
+    title = "🍺 brew-aged-upgrade"
+    subtitle = f"Upgraded {len(upgraded)} package(s)"
+    script = f'display notification "{summary}" with title "{title}" subtitle "{subtitle}"'
+    subprocess.run(["osascript", "-e", script], check=False)
+
+
 def run(state_file: str, min_days: int) -> None:
     sys.stdout.reconfigure(line_buffering=True)
     try:
@@ -83,6 +95,7 @@ def run(state_file: str, min_days: int) -> None:
         subprocess.run(["brew", "upgrade", "--formula", name], check=False)
     for name in to_upgrade_casks:
         subprocess.run(["brew", "upgrade", "--cask", name], check=False)
+    _notify_upgrade_result(to_upgrade_formulae, to_upgrade_casks)
 
 
 def status(state_file: str) -> None:
