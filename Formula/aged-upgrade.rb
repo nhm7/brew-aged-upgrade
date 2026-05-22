@@ -11,10 +11,11 @@ class AgedUpgrade < Formula
   license "MIT"
 
   depends_on :macos
+  depends_on "terminal-notifier"
   uses_from_macos "python3"
 
   def install
-    libexec.install "libexec/brew-aged-upgrade", "libexec/brew-aged-upgrade-core.py"
+    libexec.install "libexec/brew-aged-upgrade", "libexec/brew-aged-upgrade-core.py", "libexec/Homebrew.png"
     bin.write_exec_script libexec/"brew-aged-upgrade"
   end
 
