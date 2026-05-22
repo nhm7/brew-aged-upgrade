@@ -100,17 +100,6 @@ def _format_packages(packages: list[tuple[str, str]]) -> str:
     return ", ".join(f"{name} ({version})" for name, version in packages) or "none"
 
 
-def _homebrew_icon_path() -> str | None:
-    for path in (
-        os.path.join(os.path.dirname(__file__), "Homebrew.png"),
-        "/opt/homebrew/package/resources/Homebrew.png",
-        "/usr/local/Homebrew/package/resources/Homebrew.png",
-    ):
-        if os.path.exists(path):
-            return path
-    return None
-
-
 def _notify_upgrade_result(
     upgraded: list[tuple[str, str]],
     watching: list[tuple[str, str]],
@@ -120,8 +109,7 @@ def _notify_upgrade_result(
 
     title = "Homebrew Aged Upgrade"
     summary = f"Upgraded: {_format_packages(upgraded)}\nWatching: {_format_packages(watching)}"
-    icon = _homebrew_icon_path()
-    if icon and shutil.which("terminal-notifier"):
+    if shutil.which("terminal-notifier"):
         subprocess.run(
             [
                 "terminal-notifier",
@@ -129,10 +117,6 @@ def _notify_upgrade_result(
                 title,
                 "-message",
                 summary,
-                "-appIcon",
-                icon,
-                "-contentImage",
-                icon,
                 "-group",
                 "com.nhm7.brew-aged-upgrade",
             ],
