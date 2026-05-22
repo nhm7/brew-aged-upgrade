@@ -11,7 +11,6 @@ class AgedUpgrade < Formula
   license "MIT"
 
   depends_on :macos
-  depends_on "terminal-notifier"
   uses_from_macos "python3"
 
   def install

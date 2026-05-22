@@ -118,7 +118,7 @@ def _notify_upgrade_result(
     if not upgraded:
         return
 
-    title = f"Homebrew Aged Upgrade {date.today():%d.%m}"
+    title = "Homebrew Aged Upgrade"
     summary = f"Upgraded: {_format_packages(upgraded)}\nWatching: {_format_packages(watching)}"
     icon = _homebrew_icon_path()
     if icon and shutil.which("terminal-notifier"):
@@ -130,6 +130,8 @@ def _notify_upgrade_result(
                 "-message",
                 summary,
                 "-appIcon",
+                icon,
+                "-contentImage",
                 icon,
                 "-group",
                 "com.nhm7.brew-aged-upgrade",
