@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.3.0...v1.3.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* remove stale Homebrew icon install ([#26](https://github.com/nhm7/homebrew-aged-upgrade/issues/26)) ([a4b44bb](https://github.com/nhm7/homebrew-aged-upgrade/commit/a4b44bb0fc8bfe16e419919dd754d1b768259502))
+
 ## [1.3.0](https://github.com/nhm7/homebrew-aged-upgrade/compare/v1.2.1...v1.3.0) (2026-05-22)
 
 
